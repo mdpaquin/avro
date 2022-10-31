@@ -24,6 +24,12 @@ type Config struct {
 	// UnionResolutionError determines if an error will be returned
 	// when a type cannot be resolved while decoding a union.
 	UnionResolutionError bool
+
+	// PartialUnionTypeResolution dictates if the union type resolution
+	// is possible even when not all union types are registered.
+	// When enabled, type will get resolved if it is registered even if
+	// other types of the union are not.
+	PartialUnionTypeResolution bool
 }
 
 // Freeze makes the configuration immutable.
