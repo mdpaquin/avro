@@ -32,6 +32,14 @@ type Config struct {
 	// falls back to default union resolution behavior based on the value of
 	// UnionResolutionError.
 	PartialUnionTypeResolution bool
+
+	// Disable caching layer for encoders, forcing them to get rebuilt on every
+	// call to Marshal()
+	DisableEncoderCaching bool
+
+	// Disable caching layer for decoders, forcing them to get rebuilt on every
+	// call to Unmarshal()
+	DisableDecoderCaching bool
 }
 
 // Freeze makes the configuration immutable.
@@ -187,11 +195,17 @@ type cacheKey struct {
 }
 
 func (c *frozenConfig) addDecoderToCache(fingerprint [32]byte, rtype uintptr, dec ValDecoder) {
+	if c.config.DisableDecoderCaching {
+		return
+	}
 	key := cacheKey{fingerprint: fingerprint, rtype: rtype}
 	c.decoderCache.Store(key, dec)
 }
 
 func (c *frozenConfig) getDecoderFromCache(fingerprint [32]byte, rtype uintptr) ValDecoder {
+	if c.config.DisableDecoderCaching {
+		return nil
+	}
 	key := cacheKey{fingerprint: fingerprint, rtype: rtype}
 	if dec, ok := c.decoderCache.Load(key); ok {
 		return dec.(ValDecoder)
@@ -201,11 +215,17 @@ func (c *frozenConfig) getDecoderFromCache(fingerprint [32]byte, rtype uintptr) 
 }
 
 func (c *frozenConfig) addEncoderToCache(fingerprint [32]byte, rtype uintptr, enc ValEncoder) {
+	if c.config.DisableEncoderCaching {
+		return
+	}
 	key := cacheKey{fingerprint: fingerprint, rtype: rtype}
 	c.encoderCache.Store(key, enc)
 }
 
 func (c *frozenConfig) getEncoderFromCache(fingerprint [32]byte, rtype uintptr) ValEncoder {
+	if c.config.DisableEncoderCaching {
+		return nil
+	}
 	key := cacheKey{fingerprint: fingerprint, rtype: rtype}
 	if enc, ok := c.encoderCache.Load(key); ok {
 		return enc.(ValEncoder)
